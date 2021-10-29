@@ -17,6 +17,7 @@ def decision_tree_learning(dataset, depth):
 
 
 def find_split(dataset):
+    print(dataset.shape)
     best_col_num = 0
     best_attr_index = 0
     best_attr_gain = 0
@@ -28,7 +29,7 @@ def find_split(dataset):
         maximum_split_index = 0
         for split_index in range(1, len(dataset)):
 
-            if attribute[split_index-1][0] == attribute[split_index][0]:
+            if attribute[split_index - 1][0] == attribute[split_index][0]:
                 # skips if split not possible i.e. attribute values are identical
                 continue
 
@@ -45,7 +46,7 @@ def find_split(dataset):
             best_attr_index = maximum_split_index
             best_col_num = col
 
-    return best_col_num, (dataset[best_attr_index][best_col_num] + dataset[best_attr_index - 1][best_col_num]) / 2
+    return best_col_num, (dataset[best_attr_index][best_col_num] + dataset[best_attr_index - 1][best_col_num]) / 2, best_attr_gain
 
 
 def gain(dataset, leftset, rightset):
@@ -74,4 +75,12 @@ def remainder(left_set, right_set):
 
 
 H_total = H(data)  #  TODO:// inside gain function replace it with h_total
-print(find_split(data))
+active_data = data
+res = find_split(active_data)
+entropy = res[2]
+print(res)
+while entropy:
+    active_data = active_data[active_data[:, res[0]] > res[1], :]
+    res = find_split(active_data)
+    entropy = res[2]
+    print(res)
