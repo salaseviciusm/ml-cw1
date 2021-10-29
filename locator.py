@@ -17,19 +17,21 @@ def decision_tree_learning(dataset, depth):
 
 
 def find_split(dataset):
-
     best_col_num = 0
     best_attr_index = 0
     best_attr_gain = 0
 
-    for col in range(0, len(dataset[0])-1):
+    for col in range(0, len(dataset[0]) - 1):
         attribute = np.sort(dataset[:, (col, label_col)], 0)
 
         maximum_information_gain = 0
         maximum_split_index = 0
-
         for split_index in range(1, len(dataset)):
-            # TODO:// Handle dupplicate data for splits i.e. [56, 56, 56, 56].
+
+            if attribute[split_index-1][0] == attribute[split_index][0]:
+                # skips if split not possible i.e. attribute values are identical
+                continue
+
             data_l = attribute[:split_index]
             data_r = attribute[split_index:]
 
@@ -43,8 +45,7 @@ def find_split(dataset):
             best_attr_index = maximum_split_index
             best_col_num = col
 
-    # TODO: do we need to get average value between best_attr_index and best_attr_index+1 ?
-    return best_col_num, dataset[best_attr_index][best_col_num]
+    return best_col_num, (dataset[best_attr_index][best_col_num] + dataset[best_attr_index - 1][best_col_num]) / 2
 
 
 def gain(dataset, leftset, rightset):
@@ -56,12 +57,11 @@ def H(dataset):
     num_rows = dataset.shape[0]
     freq = [0 for _ in range(num_of_labels)]
     for row in dataset:
-        # todo: if relabelling need to change
         freq[int(row[-1]) - 1] += 1
     entropy = 0
     for elem in freq:
         if elem != 0:
-            p_k = elem/num_rows
+            p_k = elem / num_rows
             entropy -= p_k * math.log2(p_k)
     return entropy
 
