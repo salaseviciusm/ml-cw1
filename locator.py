@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 data = np.loadtxt("wifi_db/clean_dataset.txt")
@@ -89,7 +88,7 @@ def H(dataset):
     for elem in freq:
         if elem != 0:
             p_k = elem / num_rows
-            entropy -= p_k * math.log2(p_k)
+            entropy -= p_k * np.log2(p_k)
     return entropy
 
 

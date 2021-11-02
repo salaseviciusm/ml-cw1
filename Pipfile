@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 numpy = "*"
+pyyaml = "*"
 
 [dev-packages]
 autopep8 = "*"
