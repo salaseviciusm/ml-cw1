@@ -6,6 +6,7 @@ data = np.loadtxt("wifi_db/clean_dataset.txt")
 num_of_labels = len(np.unique(data[:, -1]))
 label_col = 7
 
+
 def preprocess(dataset):
     dataset_deleted = np.delete(dataset, 0, -1)
     return dataset
@@ -15,21 +16,27 @@ def decision_tree_learning(dataset, depth):
     if dataset.size == 0:
         return None, depth
     if len(np.unique(dataset[:, -1])) == 1:
-        return dict({"value" : np.unique(dataset[:, -1])[0]}), depth
+        return dict({
+            "value": np.unique(dataset[:, -1])[0],
+            "leaf": True,
+            "left": None,
+            "right": None
+        }), depth
     else:
         column_num, value = find_split(dataset)
         print(column_num, value)
         l_branch, l_depth = decision_tree_learning(dataset[dataset[:, column_num] < value, :], depth + 1)
         r_branch, r_depth = decision_tree_learning(dataset[dataset[:, column_num] >= value, :], depth + 1)
         node = {
-            "attribute" : column_num,
-            "value" : value,
-            "left" : l_branch,
-            "right" : r_branch,
-            "leaf" : False
+            "attribute": column_num,
+            "value": value,
+            "left": l_branch,
+            "right": r_branch,
+            "leaf": False
         }
         return node, max(l_depth, r_depth)
-        
+
+
 # [[-59. -54. -58. -59. -63. -81. -80.   1.]
 #  [-60. -58. -57. -59. -66. -82. -83.   1.]
 #  [-60. -57. -58. -58. -50. -83. -88.   4.]]
@@ -64,6 +71,7 @@ def find_split(dataset):
 
     print(best_attr_gain)
     return best_col_num, (dataset[best_attr_index][best_col_num] + dataset[best_attr_index - 1][best_col_num]) / 2
+
 
 def gain(dataset, leftset, rightset):
     return H(dataset) - remainder(leftset, rightset)
