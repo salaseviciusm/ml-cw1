@@ -80,7 +80,7 @@ def gain(dataset, leftset, rightset):
 def H(dataset):
     assert dataset.shape[1] >= 2, dataset
     num_rows = dataset.shape[0]
-    freq = [0 for _ in range(num_of_labels)]
+    freq = [0 for _ in range(len(np.unique(dataset[:, -1])))]
     for row in dataset:
         freq[int(row[-1]) - 1] += 1
     entropy = 0
