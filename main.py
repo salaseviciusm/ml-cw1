@@ -185,6 +185,7 @@ def get_f1(precision, recall):
 
 def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     res_matrix = []
+    accuracy = 0
     print("---- EVALUATION MATRIX ---- ")
     for i in labels:
         (tp, tn, fp, fn) = get_tp_tn_fp_fn_vals(confusion_matrix, i)
@@ -193,12 +194,12 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
         precision = get_precision(tp, tn, fn)
         f1 = get_f1(precision, recall)
         print("for Label :" + str(i) +
-              ", Accuracy :" + str(accuracy) +
               ", Recall :" + str(recall) +
               ", Precision :" + str(precision) +
               ", f1: " + str(f1))
         res_matrix.append([i, accuracy, recall, precision, f1])
-    return res_matrix
+    # Returns (accuracy, [label, accuracy, recall, percision, f1])
+    return (accuracy, res_matrix)
 
 
 def ten_fold_validation(data):
@@ -211,6 +212,7 @@ def ten_fold_validation(data):
             generate_confusion_matrix(testing, tree)  #  might be broken
 
     average_confusion_matrix = average_confusion_matrix / 10
+
     return get_accuracy_precision_recall_matrix(average_confusion_matrix, number_of_labels)
 
 
@@ -229,9 +231,11 @@ def prune_tree(validation_set, tree, node):
         old_node = dict(node)
         original_pair = (previous_validation_error, old_node)
         node = old_node["left"]
+        # to get accuracy  it's l_pair[0][0]
         l_pair = (evaluate(validation_set, tree), old_node["left"])
         node = old_node["right"]
         r_pair = (evaluate(validation_set, tree), old_node["right"])
+        min_pair = min(original_pair, l_pair, r_pair)
 
     else:
         prune_tree(validation_set=validation_set, tree=tree, node=node["left"])
