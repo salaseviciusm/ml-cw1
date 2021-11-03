@@ -1,6 +1,5 @@
 import numpy as np
-import pprint
-
+from visualizer import visualize_tree
 # np.random.seed(1)
 
 
@@ -17,7 +16,7 @@ def decision_tree_learning(dataset, depth=0):
         return None, depth
     if len(np.unique(dataset[:, -1])) == 1:
         return dict({
-            "value": np.unique(dataset[:, -1])[0],
+            "a_value": np.unique(dataset[:, -1])[0],
             "leaf": True,
             "left": None,
             "right": None
@@ -79,8 +78,6 @@ def remainder(left, right):
 def gain(dataset, left, right):
     return entropy(dataset) - remainder(left, right)
 
-
-x = read_data("wifi_db/clean_dataset.txt")
+x = read_data("wifi_db/noisy_dataset.txt")
 y = decision_tree_learning(x)
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(y)
+visualize_tree(y[0], y[1], "foo.png")
