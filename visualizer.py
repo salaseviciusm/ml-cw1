@@ -7,9 +7,9 @@ figure_size = (320, 90)
 dots_per_inch = 60
 
 
-def visualize_tree(tree, depth, filename):
+def visualize_tree(tree_h, depth, filename):
     pp.figure(num=None, figsize=figure_size, dpi=dots_per_inch)
-    make_tree_picture(tree, depth, (0, 0)).savefig(filename)
+    make_tree_picture(tree_h, depth, (0, 0)).savefig(filename)
     pp.close()
 
 
@@ -31,7 +31,8 @@ def make_tree_picture(node, depth, position):
     rule = "x" + str(node["attribute"]) + " > " + str(node["a_value"])
 
     pp.plot([left, x, right], [height, y, height])
-    pp.text(x, y, rule, horizontalalignment="center", verticalalignment="center", bbox=tree, fontdict=font)
+    pp.text(x, y, rule, horizontalalignment="center",
+            verticalalignment="center", bbox=tree, fontdict=font)
 
     make_tree_picture(node["left"], depth - 1, (left, height))
     make_tree_picture(node["right"], depth - 1, (right, height))
