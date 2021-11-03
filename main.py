@@ -1,5 +1,7 @@
 import numpy as np
 from visualizer import visualize_tree
+
+
 # np.random.seed(1)
 
 
@@ -48,7 +50,6 @@ def find_split(dataset):
         max_gain = 0
         for i in range(1, len(sort_labels)):
             if sort_attr[i] != sort_attr[i - 1]:
-                curr_label = sort_labels[i]
                 left = sort_labels[:i]
                 right = sort_labels[i:]
                 curr_gain = gain(sort_labels, left, right)
@@ -77,6 +78,7 @@ def remainder(left, right):
 
 def gain(dataset, left, right):
     return entropy(dataset) - remainder(left, right)
+
 
 x = read_data("wifi_db/noisy_dataset.txt")
 y = decision_tree_learning(x)
