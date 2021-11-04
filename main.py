@@ -1,9 +1,6 @@
 import numpy as np
 from visualizer import visualize_tree
 
-np.random.seed(1)
-
-
 def read_data(file_path):
     return np.loadtxt(file_path)
 
@@ -47,7 +44,6 @@ def find_split(dataset):
         attribute = dataset[:, attr_idx]
         sort_index = np.argsort(attribute)
         sort_labels, sort_attr = labels[sort_index], attribute[sort_index]
-        curr_label = sort_labels[0]
         max_gain = 0
         for i in range(1, len(sort_labels)):
             if sort_attr[i] != sort_attr[i - 1]:
@@ -94,15 +90,15 @@ def split_dataset_10_fold(data, index):
     assert 1 <= index <= 10
 
     size = len(data)
-    fold_size = size/10
+    fold_size = size / 10
     if index == 1:
         return data[fold_size:, ], data[:fold_size, ]
     elif index == 10:
-        return data[:fold_size*9, ], data[fold_size*9:, ]
+        return data[:fold_size * 9, ], data[fold_size * 9:, ]
     else:
-        test = data[(index-1)*fold_size:index*fold_size, ]
-        training = data[:(index-1)*fold_size, ]
-        training = np.append(training, data[index*fold_size:, ], axis=0)
+        test = data[(index - 1) * fold_size:index * fold_size, ]
+        training = data[:(index - 1) * fold_size, ]
+        training = np.append(training, data[index * fold_size:, ], axis=0)
         return training, test
 
 
@@ -118,15 +114,14 @@ def generate_label(tree, attributes):
 
 
 def evaluate(test_db, trained_tree):
-    # correct = 0
-    # samples, _ = test_db.shape
-    # for row in test_db:
-    #     label = row[-1]
-    #     attributes = row[:-1]
-    #     if generate_label(tree=trained_tree, attributes=attributes) == label:
-    #         correct += 1
-    # return correct / samples
-    pass
+    correct = 0
+    samples, _ = test_db.shape
+    for row in test_db:
+        label = row[-1]
+        attributes = row[:-1]
+        if generate_label(tree=trained_tree, attributes=attributes) == label:
+            correct += 1
+    return correct / samples
 
 
 """
@@ -148,10 +143,10 @@ def generate_confusion_matrix(testing_set, tree):
 
 
 def get_tp_tn_fp_fn_vals(confusion_matrix, positive_label):
-    tp = 0      # True Positive
-    tn = 0      # True Negative
-    fp = 0      # False Positive
-    fn = 0      # False Negative
+    tp = 0  # True Positive
+    tn = 0  # True Negative
+    fp = 0  # False Positive
+    fn = 0  # False Negative
     positive_label -= 1
     for row in confusion_matrix:
         for col in row:
@@ -209,7 +204,7 @@ def ten_fold_validation(data):
         training, testing = split_dataset_10_fold(data, index)
         (tree, depth) = decision_tree_learning(training)
         average_confusion_matrix = average_confusion_matrix + \
-            generate_confusion_matrix(testing, tree)  #  might be broken
+                                   generate_confusion_matrix(testing, tree)  #  might be broken
 
     average_confusion_matrix = average_confusion_matrix / 10
 
@@ -221,26 +216,27 @@ def ten_fold_validation(data):
 """
 
 
-def prune_tree(validation_set, tree, node):
-    previous_validation_error = evaluate(validation_set, tree)
-    node = tree
-    if node["left"]["leaf"] and node["right"]["leaf"]:
-        # prune and validate
-        # try setting it to the left value and calc validation error, if it's better than previous validation_err then take
-        # try setting it to the right value and calc validation error, if it's better than previous validation_err then take
-        old_node = dict(node)
-        original_pair = (previous_validation_error, old_node)
-        node = old_node["left"]
-        # to get accuracy  it's l_pair[0][0]
-        l_pair = (evaluate(validation_set, tree), old_node["left"])
-        node = old_node["right"]
-        r_pair = (evaluate(validation_set, tree), old_node["right"])
-        min_pair = min(original_pair, l_pair, r_pair)
+def prune_tree(validation_set, node):
+    if not node["left"]["leaf"]:
+        node["left"] = prune_tree(
+            validation_set=validation_set[validation_set[:, node["attribute"]] < node["a_value"], :],
+            node=node["left"]
+        )
 
-    else:
-        prune_tree(validation_set=validation_set, tree=tree, node=node["left"])
-        prune_tree(validation_set=validation_set,
-                   tree=tree, node=node["right"])
+    if not node["right"]["leaf"]:
+        node["right"] = prune_tree(
+            validation_set=validation_set[validation_set[:, node["attribute"]] >= node["a_value"], :],
+            node=node["right"]
+        )
+
+    if node["left"]["leaf"] and node["right"]["leaf"]:
+        old_node = dict(node)
+        prev = (evaluate(validation_set, old_node), old_node)
+        left = (evaluate(validation_set, old_node["left"]), old_node["left"])
+        right = (evaluate(validation_set, old_node["right"]), old_node["right"])
+        max_node = max([prev, left, right], key=lambda t: t[0])[1]
+        node = max_node
+    return node
 
 
 x = read_data("wifi_db/clean_dataset.txt")
@@ -249,4 +245,7 @@ training, testing = split_dataset(x, 80)
 
 y, depth = decision_tree_learning(training)
 print(evaluate(test_db=testing, trained_tree=y))
-visualize_tree(y, depth, "foo1.png")
+prune_tree(validation_set=testing, node=y)
+print(evaluate(test_db=testing, trained_tree=y))
+visualize_tree(y, depth, "foo2.png")
+# visualize_tree(y, depth, "foo1.png")
