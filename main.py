@@ -1,6 +1,8 @@
 import numpy as np
 from visualizer import visualize_tree
 
+np.random.seed(0)
+
 def read_data(file_path):
     return np.loadtxt(file_path)
 
@@ -40,11 +42,11 @@ def find_split(dataset):
     split = None
     split_attribute = None
     n_cols = dataset.shape[1]
+    max_gain = 0
     for attr_idx in range(n_cols - 1):
         attribute = dataset[:, attr_idx]
         sort_index = np.argsort(attribute)
         sort_labels, sort_attr = labels[sort_index], attribute[sort_index]
-        max_gain = 0
         for i in range(1, len(sort_labels)):
             if sort_attr[i] != sort_attr[i - 1]:
                 left = sort_labels[:i]
@@ -159,7 +161,7 @@ def get_tp_tn_fp_fn_vals(confusion_matrix, positive_label):
             elif col == row:
                 tn += 1
 
-    return (tp, tn, fp, fn)
+    return tp, tn, fp, fn
 
 
 def get_accuracy(tp, tn, fp, fn):
@@ -239,13 +241,13 @@ def prune_tree(validation_set, node):
     return node
 
 
-x = read_data("wifi_db/clean_dataset.txt")
-# x = read_data("wifi_db/noisy_dataset.txt")
-training, testing = split_dataset(x, 80)
+# x = read_data("wifi_db/clean_dataset.txt")
+x = read_data("wifi_db/noisy_dataset.txt")
+training, testing = split_dataset(x, 90)
 
 y, depth = decision_tree_learning(training)
+visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
 prune_tree(validation_set=testing, node=y)
 print(evaluate(test_db=testing, trained_tree=y))
-visualize_tree(y, depth, "foo2.png")
-# visualize_tree(y, depth, "foo1.png")
+visualize_tree(y, depth, "foo1.png")
