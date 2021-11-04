@@ -1,9 +1,10 @@
 import numpy as np
 
-from helpers import get_depth
+from helpers import get_max_depth, get_avg_depth
 from visualizer import visualize_tree
 
 np.random.seed(0)
+
 
 def read_data(file_path):
     return np.loadtxt(file_path)
@@ -248,10 +249,12 @@ x = read_data("wifi_db/noisy_dataset.txt")
 training, testing = split_dataset(x, 90)
 
 y, depth = decision_tree_learning(training)
-visualize_tree(y, depth, "foo.png")
+# visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
-# print(get_depth(y))
+# print(get_avg_depth(y))
+# print(get_max_depth(y))
 prune_tree(validation_set=testing, node=y)
-visualize_tree(y, depth, "foo1.png")
+# visualize_tree(y, depth, "foo1.png")
 print(evaluate(test_db=testing, trained_tree=y))
-# print(get_depth(y))
+# print(get_max_depth(y))
+# print(get_avg_depth(y))
