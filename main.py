@@ -1,4 +1,6 @@
 import numpy as np
+
+from helpers import get_depth
 from visualizer import visualize_tree
 
 np.random.seed(0)
@@ -248,6 +250,8 @@ training, testing = split_dataset(x, 90)
 y, depth = decision_tree_learning(training)
 visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
+# print(get_depth(y))
 prune_tree(validation_set=testing, node=y)
-print(evaluate(test_db=testing, trained_tree=y))
 visualize_tree(y, depth, "foo1.png")
+print(evaluate(test_db=testing, trained_tree=y))
+# print(get_depth(y))
