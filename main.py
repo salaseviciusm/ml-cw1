@@ -168,10 +168,20 @@ def predict(tree, attributes):
     return node["a_value"]
 
 
-def evaluate(test_db, trained_tree, no_print=False):
+def evaluate(test_db, trained_tree):
     (accuracy, res_matrix) = ten_fold_validation(test_db, trained_tree)
     return accuracy
 
+
+def prune_accuracy(test_db, trained_tree):
+    correct = 0
+    samples, _ = test_db.shape
+    for row in test_db:
+        label = row[-1]
+        attributes = row[:-1]
+        if predict(tree=trained_tree, attributes=attributes) == label:
+            correct += 1
+    return correct / samples
 
 """
 ---- CROSS VALIDATION CLASSIFICATION METRICS ---- 
@@ -302,9 +312,9 @@ def prune_tree(validation_set, node):
 
     if node["left"]["leaf"] and node["right"]["leaf"]:
         old_node = dict(node)
-        prev = (evaluate(validation_set, old_node), old_node)
-        left = (evaluate(validation_set, old_node["left"]), old_node["left"])
-        right = (evaluate(validation_set, old_node["right"]), old_node["right"])
+        prev = (prune_accuracy(validation_set, old_node), old_node)
+        left = (prune_accuracy(validation_set, old_node["left"]), old_node["left"])
+        right = (prune_accuracy(validation_set, old_node["right"]), old_node["right"])
         max_node = max([prev, left, right], key=lambda t: t[0])[1]
         node = max_node
     return node
