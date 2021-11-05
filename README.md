@@ -1,5 +1,8 @@
 # Usage
-```python
+
+## Ensure using Python3 with numpy
+
+```python3
 from main import read_data
 from main import split_dataset
 from tree import decision_tree_learning, predict, prune_tree
