@@ -131,7 +131,6 @@ def ten_fold_validation(data):
         training, testing = split_dataset_10_fold(data, index)
         # training, validation = split_dataset(training, 90)
         (tree, depth) = decision_tree_learning(training)
-        #  prune_tree(validation_set=validation, node=tree)
         confusion_matrix = generate_confusion_matrix(testing, tree)
         summed_confusion_matrix = summed_confusion_matrix + confusion_matrix
     print(summed_confusion_matrix)

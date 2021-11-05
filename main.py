@@ -22,6 +22,7 @@ def split_dataset(data, training_perc):
     training, test = data[:training_size, :], data[training_size:, :]
     return training, test
 
+
 # x = read_data("wifi_db/clean_dataset.txt")
 x = read_data("wifi_db/noisy_dataset.txt")
 
@@ -31,6 +32,7 @@ new_x, testing = split_dataset(x, 90)
 training, validation = split_dataset(new_x, 90)
 
 y, depth = decision_tree_learning(training)
+
 # visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
 print("avg depth = " + str(get_avg_depth(y)))
@@ -43,3 +45,4 @@ print(accuracy)
 print(res_matrix)
 print("avg depth = " + str(get_avg_depth(y)))
 print("max depth = " + str(get_max_depth(y)))
+
