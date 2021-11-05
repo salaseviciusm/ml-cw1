@@ -7,14 +7,30 @@ np.random.seed(0)
 
 
 def read_data(file_path):
+    """
+    Reads the CSV or space separated file into a 2D numpy array.
+    :param file_path: 'str' of relative or absolute file_path
+    :return: 'numpy.ndarray' of dataset in 2D array
+    """
     return np.loadtxt(file_path)
 
 
 def room_numbers(dataset):
+    """
+    Finds unique labels from data.
+    :param dataset: 'numpy.ndarray' of full dataset
+    :return: 'numpy.ndarray' 1D array of unique labels
+    """
     return np.unique(dataset[:, -1])
 
 
 def decision_tree_learning(dataset, depth=0):
+    """
+    Generates a decision tree from a training set, by maximising information gain at each split
+    :param dataset: 'numpy.ndarray' of the training set
+    :param depth: 'int' of the current depth of the decision tree
+    :return: 'dict' as a nested dictionary of the decision tree
+    """
     if dataset.size == 0:
         return None, depth
     if len(np.unique(dataset[:, -1])) == 1:
@@ -41,6 +57,13 @@ def decision_tree_learning(dataset, depth=0):
 
 
 def find_split(dataset):
+    """
+    Find split iterates over every possible interval, i.e. where the attributes differ, and calculates the
+    information gain at each split. The optimal split is the split which partitions the data set to provide the
+    largest information gain.
+    :param dataset: 'numpy.ndarray' of the dataset being operated on
+    :return: 'tuple' of the (feature, split_value)
+    """
     labels = dataset[:, -1]
     split = None
     split_attribute = None
@@ -63,6 +86,12 @@ def find_split(dataset):
 
 
 def entropy(dataset):
+    """
+    Calculates the entropy of a given dataset.
+    .. math:: -\sum_{k=1}^{K}p_{k}\cdot \log_2 p_{k}
+    :param dataset: 'numpy.ndarray' of the dataset being operated on
+    :return: 'float' of the entropy of a dataset given by label frequencies
+    """
     _, count_arr = np.unique(dataset, return_counts=True)
     n_samples = len(dataset)
     h = 0
@@ -73,12 +102,28 @@ def entropy(dataset):
 
 
 def remainder(left, right):
+    """
+    Returns the remainder term according to the formula below.
+    .. math:: \frac{\left| S_{left} \right|}{\left| S_{left} \right| + \left| S_{right} \right|}H(S_{left})
+            + \frac{\left| S_{right} \right|}{\left| S_{left} \right| + \left| S_{right} \right|}H(S_{right})
+    :param left: 'numpy.ndarray' of the left set, i.e. x < n
+    :param right: 'numpy.ndarray' of the right set, i.e. x >= n
+    :return: 'float' of the remainder term
+    """
     l_size = len(left)
     r_size = len(right)
     return (l_size * entropy(left) + r_size * entropy(right)) / (l_size + r_size)
 
 
 def gain(dataset, left, right):
+    """
+    Returns the overall information gain according to a given partition
+    .. math:: H(S_{all}) - Remainder(S_{left}, S_{right})
+    :param dataset: 'numpy.ndarray' of the operating full dataset
+    :param left: 'numpy.ndarray' of the left partitioned dataset
+    :param right: 'numpy.ndarray' of the right partitioned dataset
+    :return: 'float' of the overall information gain
+    """
     return entropy(dataset) - remainder(left, right)
 
 
@@ -107,8 +152,13 @@ def split_dataset_10_fold(data, index):
         return training, test
 
 
-def generate_label(tree, attributes):
-    # attributes = n x 1 numpy array
+def predict(tree, attributes):
+    """
+    Predicts a label following a given tree and an numpy array
+    :param tree: 'dict' of nested dictionaries holding the decision tree
+    :param attributes: 'numpy.ndarray' of a single row of attributes
+    :return: 'float' of the predicted label
+    """
     node = tree
     while not node["leaf"]:
         if attributes[node["attribute"]] < node["a_value"]:
@@ -124,7 +174,7 @@ def evaluate(test_db, trained_tree):
     for row in test_db:
         label = row[-1]
         attributes = row[:-1]
-        if generate_label(tree=trained_tree, attributes=attributes) == label:
+        if predict(tree=trained_tree, attributes=attributes) == label:
             correct += 1
     return correct / samples
 
@@ -140,7 +190,7 @@ def generate_confusion_matrix(testing_set, tree):
     n_cols = testing_set.shape[1]
     for i in range(len(testing_set)):
         row = testing_set[i][:n_cols - 1]
-        predicted_label = generate_label(tree, row)
+        predicted_label = predict(tree, row)
         actual_label = testing_set[i][-1]
         confusion_matrix[predicted_label - 1][actual_label - 1] += 1
 
@@ -222,6 +272,13 @@ def ten_fold_validation(data):
 
 
 def prune_tree(validation_set, node):
+    """
+    Prune tree attempts to replace a terminal node with both the left and the right leaves and calculates the
+    validation accuracy to determine acceptable prunes.
+    :param validation_set: 'numpy.ndarray' of the operational validation set
+    :param node: 'dict' of the current active tree/node, as every tree's branch is its own tree
+    :return: 'dict' of the pruned tree
+    """
     if not node["left"]["leaf"]:
         node["left"] = prune_tree(
             validation_set=validation_set[validation_set[:, node["attribute"]] < node["a_value"], :],
