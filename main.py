@@ -315,22 +315,22 @@ def prune_tree(validation_set, node):
         prev = (prune_accuracy(validation_set, old_node), old_node)
         left = (prune_accuracy(validation_set, old_node["left"]), old_node["left"])
         right = (prune_accuracy(validation_set, old_node["right"]), old_node["right"])
-        max_node = max([prev, left, right], key=lambda t: t[0])[1]
+        max_node = max([left, right, prev], key=lambda t: t[0])[1]
         node = max_node
     return node
 
 
-x = read_data("wifi_db/clean_dataset.txt")
-# x = read_data("wifi_db/noisy_dataset.txt")
+# x = read_data("wifi_db/clean_dataset.txt")
+x = read_data("wifi_db/noisy_dataset.txt")
 training, testing = split_dataset(x, 90)
 
 y, depth = decision_tree_learning(training)
-# visualize_tree(y, depth, "foo.png")
+visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
 # print(get_avg_depth(y))
 # print(get_max_depth(y))
 prune_tree(validation_set=testing, node=y)
-# visualize_tree(y, depth, "foo1.png")
+visualize_tree(y, depth, "foo1.png")
 print(evaluate(test_db=testing, trained_tree=y))
 # print(get_max_depth(y))
 # print(get_avg_depth(y))
