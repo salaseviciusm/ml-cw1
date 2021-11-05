@@ -181,7 +181,7 @@ def evaluate(test_db, trained_tree):
 def generate_confusion_matrix(testing_set, tree):
     labels = room_numbers(testing_set)
     n_labels = len(labels)
-    confusion_matrix = np.zeros((n_labels, n_labels))
+    confusion_matrix = np.zeros((4, 4))
     n_cols = testing_set.shape[1]
     for i in range(len(testing_set)):
         row = testing_set[i][:n_cols - 1]
@@ -261,7 +261,7 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
 def ten_fold_validation(data, tree):
     labels = room_numbers(data)
     number_of_labels = len(room_numbers(data))
-    average_confusion_matrix = np.zeros((number_of_labels, number_of_labels))
+    average_confusion_matrix = np.zeros((4, 4))
     for index in range(1, 11):
         training, testing = split_dataset_10_fold(data, index)
         average_confusion_matrix = average_confusion_matrix + \
