@@ -20,7 +20,7 @@ def make_tree_picture(node, depth, position):
     x = position[0]
     y = position[1]
 
-    if node["leaf"]:
+    if node["is_leaf"]:
         pp.text(x, y, str(node["a_value"]), horizontalalignment="center", verticalalignment="center", bbox=leaf,
                 fontdict=font)
         return

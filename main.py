@@ -36,7 +36,7 @@ def decision_tree_learning(dataset, depth=0):
     if len(np.unique(dataset[:, -1])) == 1:
         return dict({
             "a_value": np.unique(dataset[:, -1])[0],
-            "leaf": True
+            "is_leaf": True
         }), depth
     else:
         column_num, value = find_split(dataset)
@@ -49,7 +49,7 @@ def decision_tree_learning(dataset, depth=0):
             "a_value": value,
             "left": l_branch,
             "right": r_branch,
-            "leaf": False
+            "is_leaf": False
         }
         return node, max(l_depth, r_depth)
 
@@ -159,7 +159,7 @@ def predict(tree, attributes):
     :return: 'float' of the predicted label
     """
     node = tree
-    while not node["leaf"]:
+    while not node["is_leaf"]:
         if attributes[node["attribute"]] < node["a_value"]:
             node = node["left"]
         else:
@@ -323,10 +323,10 @@ def prune_tree(validation_set, node, majority_attribute=-1.0):
     if len(validation_set):
         labels = validation_set[:, -1].astype(int)
         majority_attribute = np.bincount(labels).argmax()
-    if node["leaf"]:
+    if node["is_leaf"]:
         return node
 
-    if not node["left"]["leaf"]:
+    if not node["left"]["is_leaf"]:
         node["left"] = prune_tree(
             validation_set=validation_set[validation_set[:,
                                           node["attribute"]] < node["a_value"], :],
@@ -334,7 +334,7 @@ def prune_tree(validation_set, node, majority_attribute=-1.0):
             majority_attribute=majority_attribute
         )
 
-    if not node["right"]["leaf"]:
+    if not node["right"]["is_leaf"]:
         node["right"] = prune_tree(
             validation_set=validation_set[validation_set[:,
                                           node["attribute"]] >= node["a_value"], :],
@@ -342,12 +342,12 @@ def prune_tree(validation_set, node, majority_attribute=-1.0):
             majority_attribute=majority_attribute
         )
 
-    if node["left"]["leaf"] and node["right"]["leaf"]:
+    if node["left"]["is_leaf"] and node["right"]["is_leaf"]:
         old_node = dict(node)
         if not len(validation_set):
             return dict({
                 "a_value": majority_attribute,
-                "leaf": True
+                "is_leaf": True
             })
         prev = (evaluate(validation_set, old_node), old_node)
         left = (evaluate(validation_set, old_node["left"]), old_node["left"])
