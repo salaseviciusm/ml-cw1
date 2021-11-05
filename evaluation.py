@@ -60,7 +60,7 @@ def get_tp_tn_fp_fn_vals(confusion_matrix, positive_label):
                 tp += confusion_matrix[r][c]
             elif c == positive_label and r != positive_label:
                 fp += confusion_matrix[r][c]
-            elif c == positive_label and r != positive_label:
+            elif c != positive_label and r == positive_label:
                 fn += confusion_matrix[r][c]
             elif c == r:
                 tn += confusion_matrix[r][c]
