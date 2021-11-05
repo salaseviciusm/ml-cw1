@@ -138,7 +138,6 @@ def split_dataset_10_fold(data, index):
     # Returns tuple of training_set, testing_set, where the testing set
     # is the index-th fold in the dataset
     assert 1 <= index <= 10
-
     size = len(data)
     fold_size = size // 10
     if index == 1:
@@ -169,11 +168,6 @@ def predict(tree, attributes):
 
 
 def evaluate(test_db, trained_tree):
-    (accuracy, res_matrix) = ten_fold_validation(test_db, trained_tree)
-    return accuracy
-
-
-def prune_accuracy(test_db, trained_tree):
     correct = 0
     samples, _ = test_db.shape
     for row in test_db:
@@ -268,12 +262,14 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     return res_matrix
 
 
-def ten_fold_validation(data, tree):
+def ten_fold_validation(data):
     labels = room_numbers(data)
     number_of_labels = len(room_numbers(data))
     average_confusion_matrix = np.zeros((4, 4))
     for index in range(1, 11):
         training, testing = split_dataset_10_fold(data, index)
+
+        (tree, depth) = decision_tree_learning(training)
         average_confusion_matrix = average_confusion_matrix + \
                                    generate_confusion_matrix(testing, tree)  #  might be broken
 
@@ -312,9 +308,9 @@ def prune_tree(validation_set, node):
 
     if node["left"]["leaf"] and node["right"]["leaf"]:
         old_node = dict(node)
-        prev = (prune_accuracy(validation_set, old_node), old_node)
-        left = (prune_accuracy(validation_set, old_node["left"]), old_node["left"])
-        right = (prune_accuracy(validation_set, old_node["right"]), old_node["right"])
+        prev = (evaluate(validation_set, old_node), old_node)
+        left = (evaluate(validation_set, old_node["left"]), old_node["left"])
+        right = (evaluate(validation_set, old_node["right"]), old_node["right"])
         max_node = max([left, right, prev], key=lambda t: t[0])[1]
         node = max_node
     return node
@@ -332,5 +328,6 @@ print(evaluate(test_db=testing, trained_tree=y))
 prune_tree(validation_set=testing, node=y)
 visualize_tree(y, depth, "foo1.png")
 print(evaluate(test_db=testing, trained_tree=y))
+print(ten_fold_validation(x))
 # print(get_max_depth(y))
 # print(get_avg_depth(y))
