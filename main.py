@@ -3,7 +3,7 @@ import numpy as np
 from helpers import get_max_depth, get_avg_depth
 from visualizer import visualize_tree
 
-np.random.seed(2)
+np.random.seed(3)
 
 
 def read_data(file_path):
@@ -127,16 +127,18 @@ def gain(dataset, left, right):
     return entropy(dataset) - remainder(left, right)
 
 
-def split_dataset(data, training_perc, shuffle=True):
-    if shuffle:
-        np.random.shuffle(data)
-    training, test = data[:training_perc, :], data[training_perc:, :]
+def split_dataset(data, training_perc):
+    size = len(data)
+    training_size = int(size * training_perc/100)
+    training, test = data[:training_size, :], data[training_size:, :]
     return training, test
 
 
 def split_dataset_10_fold(data, index):
-    # Returns tuple of training_set, testing_set, where the testing set
-    # is the index-th fold in the dataset
+    """
+    Returns tuple of training_set, testing_set, where the testing set
+    is the index-th fold in the dataset
+    """
     assert 1 <= index <= 10
     size = len(data)
     fold_size = size // 10
@@ -176,6 +178,7 @@ def evaluate(test_db, trained_tree):
         if predict(tree=trained_tree, attributes=attributes) == label:
             correct += 1
     return correct / samples
+
 
 """
 ---- CROSS VALIDATION CLASSIFICATION METRICS ---- 
@@ -262,21 +265,45 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     return res_matrix
 
 
+def nested_ten_fold_validation(data):
+    labels = room_numbers(data)
+    number_of_labels = len(room_numbers(data))
+    summed_confusion_matrix = np.zeros((4, 4))
+    for index in range(1, 11):
+        training, testing = split_dataset_10_fold(data, index)
+        (tree, depth) = decision_tree_learning(training)
+
+        for validation_index in range(1, 11):
+            training, validation = split_dataset_10_fold(training, index)
+            prune_tree(validation_set=validation, node=tree)
+            confusion_matrix = generate_confusion_matrix(testing, tree)
+            summed_confusion_matrix = summed_confusion_matrix + confusion_matrix
+
+    print(summed_confusion_matrix)
+    summed_confusion_matrix = summed_confusion_matrix
+    overall_accuracy = get_overall_accuracy(summed_confusion_matrix)
+    accuracy_precision_recall_f1_per_label = \
+        get_accuracy_precision_recall_matrix(summed_confusion_matrix, labels)
+
+    return (overall_accuracy, accuracy_precision_recall_f1_per_label)
+
+
 def ten_fold_validation(data):
     labels = room_numbers(data)
     number_of_labels = len(room_numbers(data))
-    average_confusion_matrix = np.zeros((4, 4))
+    summed_confusion_matrix = np.zeros((4, 4))
     for index in range(1, 11):
         training, testing = split_dataset_10_fold(data, index)
-
+        # training, validation = split_dataset(training, 90)
         (tree, depth) = decision_tree_learning(training)
-        average_confusion_matrix = average_confusion_matrix + \
-                                   generate_confusion_matrix(testing, tree)  #  might be broken
-
-    average_confusion_matrix = average_confusion_matrix / 10
-    overall_accuracy = get_overall_accuracy(average_confusion_matrix)
+        # prune_tree(validation_set=validation, node=tree)
+        confusion_matrix = generate_confusion_matrix(testing, tree)
+        summed_confusion_matrix = summed_confusion_matrix + confusion_matrix
+    print(summed_confusion_matrix)
+    summed_confusion_matrix = summed_confusion_matrix
+    overall_accuracy = get_overall_accuracy(summed_confusion_matrix)
     accuracy_precision_recall_f1_per_label = \
-        get_accuracy_precision_recall_matrix(average_confusion_matrix, labels)
+        get_accuracy_precision_recall_matrix(summed_confusion_matrix, labels)
 
     return (overall_accuracy, accuracy_precision_recall_f1_per_label)
 
@@ -294,40 +321,54 @@ def prune_tree(validation_set, node):
     :param node: 'dict' of the current active tree/node, as every tree's branch is its own tree
     :return: 'dict' of the pruned tree
     """
+    if node["leaf"]:
+        return node
+
     if not node["left"]["leaf"]:
         node["left"] = prune_tree(
-            validation_set=validation_set[validation_set[:, node["attribute"]] < node["a_value"], :],
+            validation_set=validation_set[validation_set[:,
+                                                         node["attribute"]] < node["a_value"], :],
             node=node["left"]
         )
 
     if not node["right"]["leaf"]:
         node["right"] = prune_tree(
-            validation_set=validation_set[validation_set[:, node["attribute"]] >= node["a_value"], :],
+            validation_set=validation_set[validation_set[:,
+                                                         node["attribute"]] >= node["a_value"], :],
             node=node["right"]
         )
 
     if node["left"]["leaf"] and node["right"]["leaf"]:
         old_node = dict(node)
+        if not len(validation_set):
+            return node["left"]
         prev = (evaluate(validation_set, old_node), old_node)
         left = (evaluate(validation_set, old_node["left"]), old_node["left"])
-        right = (evaluate(validation_set, old_node["right"]), old_node["right"])
+        right = (evaluate(validation_set,
+                 old_node["right"]), old_node["right"])
         max_node = max([left, right, prev], key=lambda t: t[0])[1]
         node = max_node
     return node
 
 
-# x = read_data("wifi_db/clean_dataset.txt")
-x = read_data("wifi_db/noisy_dataset.txt")
-training, testing = split_dataset(x, 90)
+x = read_data("wifi_db/clean_dataset.txt")
+# x = read_data("wifi_db/noisy_dataset.txt")
+
+np.random.shuffle(x)
+
+new_x, testing = split_dataset(x, 90)
+training, validation = split_dataset(new_x, 90)
 
 y, depth = decision_tree_learning(training)
 visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
-# print(get_avg_depth(y))
-# print(get_max_depth(y))
-prune_tree(validation_set=testing, node=y)
+print("avg depth = " + str(get_avg_depth(y)))
+print("max depth = " + str(get_max_depth(y)))
+prune_tree(validation_set=validation, node=y)
 visualize_tree(y, depth, "foo1.png")
 print(evaluate(test_db=testing, trained_tree=y))
-print(ten_fold_validation(x))
-# print(get_max_depth(y))
-# print(get_avg_depth(y))
+accuracy, res_matrix = nested_ten_fold_validation(x)
+print(accuracy)
+print(res_matrix)
+print("avg depth = " + str(get_avg_depth(y)))
+print("max depth = " + str(get_max_depth(y)))
