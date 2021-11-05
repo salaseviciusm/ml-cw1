@@ -81,7 +81,8 @@ def entropy(dataset):
     h = 0
     for freq in count_arr:
         p_k = freq / n_samples
-        h -= p_k * np.log2(p_k)
+        if p_k:
+            h -= p_k * np.log2(p_k)
     return h
 
 
