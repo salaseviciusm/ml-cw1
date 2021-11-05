@@ -36,9 +36,7 @@ def decision_tree_learning(dataset, depth=0):
     if len(np.unique(dataset[:, -1])) == 1:
         return dict({
             "a_value": np.unique(dataset[:, -1])[0],
-            "leaf": True,
-            "left": None,
-            "right": None
+            "leaf": True
         }), depth
     else:
         column_num, value = find_split(dataset)
@@ -129,7 +127,7 @@ def gain(dataset, left, right):
 
 def split_dataset(data, training_perc):
     size = len(data)
-    training_size = int(size * training_perc/100)
+    training_size = int(size * training_perc / 100)
     training, test = data[:training_size, :], data[training_size:, :]
     return training, test
 
@@ -296,7 +294,7 @@ def ten_fold_validation(data):
         training, testing = split_dataset_10_fold(data, index)
         # training, validation = split_dataset(training, 90)
         (tree, depth) = decision_tree_learning(training)
-        # prune_tree(validation_set=validation, node=tree)
+        #  prune_tree(validation_set=validation, node=tree)
         confusion_matrix = generate_confusion_matrix(testing, tree)
         summed_confusion_matrix = summed_confusion_matrix + confusion_matrix
     print(summed_confusion_matrix)
@@ -305,7 +303,7 @@ def ten_fold_validation(data):
     accuracy_precision_recall_f1_per_label = \
         get_accuracy_precision_recall_matrix(summed_confusion_matrix, labels)
 
-    return (overall_accuracy, accuracy_precision_recall_f1_per_label)
+    return overall_accuracy, accuracy_precision_recall_f1_per_label
 
 
 """
@@ -313,39 +311,48 @@ def ten_fold_validation(data):
 """
 
 
-def prune_tree(validation_set, node):
+def prune_tree(validation_set, node, majority_attribute=-1.0):
     """
     Prune tree attempts to replace a terminal node with both the left and the right leaves and calculates the
     validation accuracy to determine acceptable prunes.
+    :param majority_attribute: maintains the previous majority attribute of the validation set while not empty
     :param validation_set: 'numpy.ndarray' of the operational validation set
     :param node: 'dict' of the current active tree/node, as every tree's branch is its own tree
     :return: 'dict' of the pruned tree
     """
+    if len(validation_set):
+        labels = validation_set[:, -1].astype(int)
+        majority_attribute = np.bincount(labels).argmax()
     if node["leaf"]:
         return node
 
     if not node["left"]["leaf"]:
         node["left"] = prune_tree(
             validation_set=validation_set[validation_set[:,
-                                                         node["attribute"]] < node["a_value"], :],
-            node=node["left"]
+                                          node["attribute"]] < node["a_value"], :],
+            node=node["left"],
+            majority_attribute=majority_attribute
         )
 
     if not node["right"]["leaf"]:
         node["right"] = prune_tree(
             validation_set=validation_set[validation_set[:,
-                                                         node["attribute"]] >= node["a_value"], :],
-            node=node["right"]
+                                          node["attribute"]] >= node["a_value"], :],
+            node=node["right"],
+            majority_attribute=majority_attribute
         )
 
     if node["left"]["leaf"] and node["right"]["leaf"]:
         old_node = dict(node)
         if not len(validation_set):
-            return node["left"]
+            return dict({
+                "a_value": majority_attribute,
+                "leaf": True
+            })
         prev = (evaluate(validation_set, old_node), old_node)
         left = (evaluate(validation_set, old_node["left"]), old_node["left"])
         right = (evaluate(validation_set,
-                 old_node["right"]), old_node["right"])
+                          old_node["right"]), old_node["right"])
         max_node = max([left, right, prev], key=lambda t: t[0])[1]
         node = max_node
     return node
@@ -360,7 +367,7 @@ new_x, testing = split_dataset(x, 90)
 training, validation = split_dataset(new_x, 90)
 
 y, depth = decision_tree_learning(training)
-visualize_tree(y, depth, "foo.png")
+# visualize_tree(y, depth, "foo.png")
 print(evaluate(test_db=testing, trained_tree=y))
 print("avg depth = " + str(get_avg_depth(y)))
 print("max depth = " + str(get_max_depth(y)))
