@@ -140,7 +140,7 @@ def split_dataset_10_fold(data, index):
     assert 1 <= index <= 10
 
     size = len(data)
-    fold_size = size / 10
+    fold_size = size // 10
     if index == 1:
         return data[fold_size:, ], data[:fold_size, ]
     elif index == 10:
@@ -180,13 +180,14 @@ def evaluate(test_db, trained_tree):
 
 def generate_confusion_matrix(testing_set, tree):
     labels = room_numbers(testing_set)
-    confusion_matrix = np.zeros((labels, labels))
+    n_labels = len(labels)
+    confusion_matrix = np.zeros((n_labels, n_labels))
     n_cols = testing_set.shape[1]
     for i in range(len(testing_set)):
         row = testing_set[i][:n_cols - 1]
         predicted_label = predict(tree, row)
         actual_label = testing_set[i][-1]
-        confusion_matrix[predicted_label - 1][actual_label - 1] += 1
+        confusion_matrix[int(predicted_label - 1)][int(actual_label - 1)] += 1
 
     return confusion_matrix
 
@@ -245,8 +246,8 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     for i in labels:
         (tp, tn, fp, fn) = get_tp_tn_fp_fn_vals(confusion_matrix, i)
         accuracy = get_accuracy(tp, tn, fp, fn)
-        recall = get_recall(tp, tn, fp)
-        precision = get_precision(tp, tn, fn)
+        recall = get_recall(tp, fp)
+        precision = get_precision(tp, fn)
         f1 = get_f1(precision, recall)
         print("for Label :" + str(i) +
               ", Accuracy :" + str(accuracy) +
@@ -258,7 +259,8 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
 
 
 def ten_fold_validation(data, tree):
-    number_of_labels = room_numbers(data)
+    labels = room_numbers(data)
+    number_of_labels = len(room_numbers(data))
     average_confusion_matrix = np.zeros((number_of_labels, number_of_labels))
     for index in range(1, 11):
         training, testing = split_dataset_10_fold(data, index)
@@ -268,7 +270,7 @@ def ten_fold_validation(data, tree):
     average_confusion_matrix = average_confusion_matrix / 10
     overall_accuracy = get_overall_accuracy(average_confusion_matrix)
     accuracy_precision_recall_f1_per_label = \
-        get_accuracy_precision_recall_matrix(average_confusion_matrix, number_of_labels)
+        get_accuracy_precision_recall_matrix(average_confusion_matrix, labels)
 
     return (overall_accuracy, accuracy_precision_recall_f1_per_label)
 
