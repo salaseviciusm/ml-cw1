@@ -3,7 +3,7 @@ import numpy as np
 from helpers import get_max_depth, get_avg_depth
 from visualizer import visualize_tree
 
-np.random.seed(0)
+np.random.seed(2)
 
 
 def read_data(file_path):
@@ -168,7 +168,7 @@ def predict(tree, attributes):
     return node["a_value"]
 
 
-def evaluate(test_db, trained_tree):
+def evaluate(test_db, trained_tree, no_print=False):
     (accuracy, res_matrix) = ten_fold_validation(test_db, trained_tree)
     return accuracy
 
@@ -310,8 +310,8 @@ def prune_tree(validation_set, node):
     return node
 
 
-# x = read_data("wifi_db/clean_dataset.txt")
-x = read_data("wifi_db/noisy_dataset.txt")
+x = read_data("wifi_db/clean_dataset.txt")
+# x = read_data("wifi_db/noisy_dataset.txt")
 training, testing = split_dataset(x, 90)
 
 y, depth = decision_tree_learning(training)
