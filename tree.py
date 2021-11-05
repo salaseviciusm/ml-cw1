@@ -27,9 +27,9 @@ def decision_tree_learning(dataset, depth=0):
     else:
         column_num, value = find_split(dataset)
         l_branch, l_depth = decision_tree_learning(
-            dataset[dataset[:, column_num] < value, :], depth + 1)
+            dataset[dataset[:, column_num] < value], depth + 1)
         r_branch, r_depth = decision_tree_learning(
-            dataset[dataset[:, column_num] >= value, :], depth + 1)
+            dataset[dataset[:, column_num] >= value], depth + 1)
         node = {
             "attribute": column_num,
             "a_value": value,
