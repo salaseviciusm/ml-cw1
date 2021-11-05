@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+numpy = "*"
+pyyaml = "*"
+matplotlib = "*"
 
 [dev-packages]
 autopep8 = "*"
