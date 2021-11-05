@@ -169,14 +169,8 @@ def predict(tree, attributes):
 
 
 def evaluate(test_db, trained_tree):
-    correct = 0
-    samples, _ = test_db.shape
-    for row in test_db:
-        label = row[-1]
-        attributes = row[:-1]
-        if predict(tree=trained_tree, attributes=attributes) == label:
-            correct += 1
-    return correct / samples
+    (accuracy, res_matrix) = ten_fold_validation(test_db, trained_tree)
+    return accuracy
 
 
 """
@@ -197,22 +191,34 @@ def generate_confusion_matrix(testing_set, tree):
     return confusion_matrix
 
 
+def get_overall_accuracy(confusion_matrix):
+    correct = 0
+    total = 0
+
+    for r in range(len(confusion_matrix)):
+        for c in range(len(confusion_matrix[0])):
+            if c == r:
+                correct += confusion_matrix[r][c]
+            total += confusion_matrix[r][c]
+    return correct / total
+
+
 def get_tp_tn_fp_fn_vals(confusion_matrix, positive_label):
     tp = 0  # True Positive
     tn = 0  # True Negative
     fp = 0  # False Positive
     fn = 0  # False Negative
     positive_label -= 1
-    for row in confusion_matrix:
-        for col in row:
-            if col == positive_label and row == positive_label:
-                tp += 1
-            elif col == positive_label and row != positive_label:
-                fp += 1
-            elif row == positive_label and row != positive_label:
-                fn += 1
-            elif col == row:
-                tn += 1
+    for r in range(len(confusion_matrix)):
+        for c in range(len(confusion_matrix[0])):
+            if c == positive_label and r == positive_label:
+                tp += confusion_matrix[r][c]
+            elif c == positive_label and r != positive_label:
+                fp += confusion_matrix[r][c]
+            elif c == positive_label and r != positive_label:
+                fn += confusion_matrix[r][c]
+            elif c == r:
+                tn += confusion_matrix[r][c]
 
     return tp, tn, fp, fn
 
@@ -235,7 +241,6 @@ def get_f1(precision, recall):
 
 def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     res_matrix = []
-    accuracy = 0
     print("---- EVALUATION MATRIX ---- ")
     for i in labels:
         (tp, tn, fp, fn) = get_tp_tn_fp_fn_vals(confusion_matrix, i)
@@ -244,26 +249,28 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
         precision = get_precision(tp, tn, fn)
         f1 = get_f1(precision, recall)
         print("for Label :" + str(i) +
+              ", Accuracy :" + str(accuracy) +
               ", Recall :" + str(recall) +
               ", Precision :" + str(precision) +
               ", f1: " + str(f1))
         res_matrix.append([i, accuracy, recall, precision, f1])
-    # Returns (accuracy, [label, accuracy, recall, percision, f1])
-    return (accuracy, res_matrix)
+    return res_matrix
 
 
-def ten_fold_validation(data):
+def ten_fold_validation(data, tree):
     number_of_labels = room_numbers(data)
     average_confusion_matrix = np.zeros((number_of_labels, number_of_labels))
     for index in range(1, 11):
         training, testing = split_dataset_10_fold(data, index)
-        (tree, depth) = decision_tree_learning(training)
         average_confusion_matrix = average_confusion_matrix + \
                                    generate_confusion_matrix(testing, tree)  #  might be broken
 
     average_confusion_matrix = average_confusion_matrix / 10
+    overall_accuracy = get_overall_accuracy(average_confusion_matrix)
+    accuracy_precision_recall_f1_per_label = \
+        get_accuracy_precision_recall_matrix(average_confusion_matrix, number_of_labels)
 
-    return get_accuracy_precision_recall_matrix(average_confusion_matrix, number_of_labels)
+    return (overall_accuracy, accuracy_precision_recall_f1_per_label)
 
 
 """
