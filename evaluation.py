@@ -72,8 +72,8 @@ def get_accuracy(tp, tn, fp, fn):
     return (tp + tn) / (tp + tn + fp + fn)
 
 
-def get_recall(tp, fp):
-    return tp / (tp + fp)
+def get_recall(tp, fn):
+    return tp / (tp + fn)
 
 
 def get_precision(tp, fp):
@@ -90,7 +90,7 @@ def get_accuracy_precision_recall_matrix(confusion_matrix, labels):
     for i in labels:
         (tp, tn, fp, fn) = get_tp_tn_fp_fn_vals(confusion_matrix, i)
         accuracy = get_accuracy(tp, tn, fp, fn)
-        recall = get_recall(tp, fp)
+        recall = get_recall(tp, fn)
         precision = get_precision(tp, fp)
         f1 = get_f1(precision, recall)
         print("for Label :" + str(i) +
