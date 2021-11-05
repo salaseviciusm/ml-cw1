@@ -110,7 +110,8 @@ def nested_ten_fold_validation(data):
         (tree, depth) = decision_tree_learning(training)
 
         for validation_index in range(1, 11):
-            training, validation = split_dataset_10_fold(training, index)
+            training, validation = split_dataset_10_fold(
+                training, validation_index)
             prune_tree(validation_set=validation, node=tree)
             confusion_matrix = generate_confusion_matrix(testing, tree)
             summed_confusion_matrix = summed_confusion_matrix + confusion_matrix
